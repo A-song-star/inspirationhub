@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-w63(as6^^5*-qse0d#*22#59gpu_y+x=c7nn)e$#val$pu8*)&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [""]
+ALLOWED_HOSTS = ["alexinspiration2026.pythonanywhere.com"]
 
 
 # Application definition
@@ -114,7 +114,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+# STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = os.path.join(BASE_DIR , 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
