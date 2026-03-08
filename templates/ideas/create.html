@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-6">✨ 创建新灵感</h1>
+
+  <form method="POST" class="bg-white p-6 rounded-lg shadow-md">
+    {% csrf_token %}
+
+    <!-- Django 表单自动渲染 -->
+    <div class="space-y-4">
+      {{ form.as_p }}
+    </div>
+
+    <div class="mt-6">
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+        保存灵感
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

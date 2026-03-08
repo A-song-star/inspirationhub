@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}灵感分享社区{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 开场动画样式 */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        
+        .splash-icon {
+            font-size: 4rem;
+            color: #3b82f6;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite, float 3s ease-in-out infinite;
+        }
+        
+        .splash-text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+        }
+        
+        .splash-text.chinese {
+            color: #60a5fa;
+            animation: fadeIn 1s ease-out 1s forwards;
+        }
+        
+        .splash-text.english {
+            color: #93c5fd;
+            font-size: 1.8rem;
+            margin-top: 1rem;
+            animation: fadeIn 1s ease-out 2s forwards;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        /* 黑暗模式滚动条 */
+        .dark ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        /* 卡片悬停效果 */
+        .idea-card {
+            transition: all 0.3s ease;
+        }
+        
+        .idea-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* 点赞动画 */
+        .like-animation {
+            animation: likePop 0.3s ease;
+        }
+        
+        @keyframes likePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-200">
+    
+    <!-- 开场动画 -->
+    {% if show_animation %}
+    <div id="splash-screen">
+        <div class="splash-icon">
+            <i class="fas fa-lightbulb"></i>
+        </div>
+        <div class="splash-text chinese">灵感改变世界</div>
+        <div class="splash-text english">Inspiration Changes The World</div>
+    </div>
+    {% endif %}
+    
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <!-- 品牌 -->
+                <a href="{% url 'home' %}" class="flex items-center space-x-2 text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>InspirationHub</span>
+                </a>
+                
+                <!-- 导航链接 -->
+                <div class="flex items-center space-x-6">
+                    <a href="{% url 'home' %}" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        <i class="fas fa-home"></i> 首页
+                    </a>
+                    
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'create-idea' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
+                            <i class="fas fa-plus"></i>
+                            <span>分享灵感</span>
+                        </a>
+                        
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2 hover:text-blue-600 dark:hover:text-blue-400">
+                                <i class="fas fa-user-circle text-xl"></i>
+                                <span>{{ user.username }}</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-user mr-2"></i>个人中心
+                                </a>
+                                <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <i class="fas fa-sign-in-alt"></i> 登录
+                        </a>
+                        <a href="{% url 'register' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            注册
+                        </a>
+                    {% endif %}
+                    
+                    <!-- 黑暗模式切换 -->
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 消息通知 -->
+    {% if messages %}
+    <div class="container mx-auto px-4 mt-4">
+        {% for message in messages %}
+        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-lg" role="alert">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                <span>{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- 主内容 -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2 text-xl font-bold text-blue-600 dark:text-blue-400">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>InspirationHub</span>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">分享灵感，改变世界</p>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+                        <i class="fab fa-discord text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center text-gray-600 dark:text-gray-400">
+                <p>&copy; 2026 InspirationHub. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- CSRF Token for AJAX -->
+    {% csrf_token %}
+    
+    <!-- JavaScript -->
+    <script>
+        // 开场动画控制
+        document.addEventListener('DOMContentLoaded', function() {
+            const splashScreen = document.getElementById('splash-screen');
+            if (splashScreen) {
+                setTimeout(() => {
+                    splashScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                    }, 1000);
+                }, 3000);
+            }
+            
+            // 主题切换
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const html = document.documentElement;
+                    if (html.classList.contains('dark')) {
+                        html.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        html.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                });
+            }
+            
+            // 初始化主题
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // 点赞功能
+            document.querySelectorAll('.like-btn').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const ideaId = this.dataset.ideaId;
+                    const likeIcon = this.querySelector('i');
+                    const likeCount = this.querySelector('.like-count');
+                    
+                    try {
+                        const response = await fetch(`/idea/like/${ideaId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        
+                        const data = await response.json();
+                        
+                        // 更新UI
+                        if (data.liked) {
+                            likeIcon.classList.remove('far');
+                            likeIcon.classList.add('fas', 'text-red-500');
+                            likeIcon.classList.add('like-animation');
+                        } else {
+                            likeIcon.classList.remove('fas', 'text-red-500');
+                            likeIcon.classList.add('far');
+                        }
+                        
+                        likeCount.textContent = data.total_likes;
+                        
+                        // 移除动画类
+                        setTimeout(() => {
+                            likeIcon.classList.remove('like-animation');
+                        }, 300);
+                        
+                    } catch (error) {
+                        console.error('点赞失败:', error);
+                    }
+                });
+            });
+            
+            // 表单提交处理
+            const ideaForm = document.getElementById('idea-form');
+            if (ideaForm) {
+                ideaForm.addEventListener('submit', function(e) {
+                    const title = this.querySelector('#id_title').value.trim();
+                    const description = this.querySelector('#id_description').value.trim();
+                    
+                    if (!title) {
+                        e.preventDefault();
+                        alert('请输入灵感标题');
+                        return false;
+                    }
+                    
+                    if (!description) {
+                        e.preventDefault();
+                        alert('请输入灵感描述');
+                        return false;
+                    }
+                    
+                    return true;
+                });
+            }
+        });
+        
+        // 获取CSRF Token的函数
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

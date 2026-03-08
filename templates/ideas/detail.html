@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ idea.title }} - 灵感分享社区{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- 返回按钮 -->
+    <div class="mb-6">
+        <a href="{% url 'home' %}" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>
+            <span>返回首页</span>
+        </a>
+    </div>
+    
+    <!-- 灵感详情卡片 -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="p-8">
+            <!-- 用户信息 -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-lg">{{ idea.user.username }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ idea.created_at|date:"Y年m月d日 H:i" }}</div>
+                    </div>
+                </div>
+                
+                <!-- 点赞按钮 -->
+                <button class="like-btn flex items-center space-x-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-3 rounded-lg transition-colors {% if user_has_liked %}text-red-500{% else %}text-gray-600 dark:text-gray-300{% endif %}"
+                        data-idea-id="{{ idea.pk }}"
+                        {% if not user.is_authenticated %}onclick="alert('请先登录以点赞')"{% endif %}>
+                    <i class="{% if user_has_liked %}fas fa-heart{% else %}far fa-heart{% endif %} text-xl"></i>
+                    <div class="text-center">
+                        <div class="font-bold text-lg like-count">{{ idea.total_likes }}</div>
+                        <div class="text-xs">点赞</div>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- 灵感标题 -->
+            <h1 class="text-3xl font-bold mb-6">{{ idea.title }}</h1>
+            
+            <!-- 灵感内容 -->
+            <div class="prose dark:prose-invert max-w-none mb-8">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 border-l-4 border-blue-500">
+                    {{ idea.description|linebreaks }}
+                </div>
+            </div>
+            
+            <!-- 标签和操作 -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm px-3 py-1 rounded-full">
+                        <i class="fas fa-lightbulb mr-1"></i>灵感
+                    </span>
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm px-3 py-1 rounded-full">
+                        <i class="fas fa-users mr-1"></i>社区分享
+                    </span>
+                </div>
+                
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    最后更新: {{ idea.updated_at|date:"m-d H:i" }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 评论区域 -->
+    <div id="comments" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div class="p-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-comments mr-3 text-blue-600 dark:text-blue-400"></i>
+                评论 ({{ comments.count }})
+            </h2>
+            
+            <!-- 评论表单 -->
+            {% if user.is_authenticated %}
+            <div class="mb-8 p-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                <form method="POST" action="{% url 'add-comment' idea.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="{{ comment_form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">发表评论</label>
+                        {{ comment_form.content }}
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>发布评论</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-8">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 text-xl mr-3"></i>
+                    <p class="text-blue-800 dark:text-blue-300">
+                        请 <a href="{% url 'login' %}" class="font-semibold hover:underline">登录</a> 后发表评论
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- 评论列表 -->
+            <div class="space-y-6">
+                {% for comment in comments %}
+                <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                    <div class="flex items-start mb-4">
+                        <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-user text-green-600 dark:text-green-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-semibold">{{ comment.user.username }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ comment.created_at|date:"Y-m-d H:i" }}</div>
+                                </div>
+                                {% if comment.user == user %}
+                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded">您</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pl-13">
+                        <p class="text-gray-700 dark:text-gray-300">{{ comment.content|linebreaks }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12">
+                    <div class="text-6xl text-gray-300 dark:text-gray-700 mb-4">
+                        <i class="fas fa-comment-slash"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">暂无评论</h3>
+                    <p class="text-gray-600 dark:text-gray-400">成为第一个评论的人吧！</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // 评论表单验证
+    const commentForm = document.querySelector('form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            const content = this.querySelector('#id_content')?.value.trim();
+            if (content && content.length < 5) {
+                e.preventDefault();
+                alert('评论内容至少需要5个字符');
+                return false;
+            }
+        });
+    }
+    
+    // 平滑滚动到评论区域
+    if (window.location.hash === '#comments') {
+        setTimeout(() => {
+            const commentsSection = document.getElementById('comments');
+            if (commentsSection) {
+                window.scrollTo({
+                    top: commentsSection.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            }
+        }, 100);
+    }
+</script>
+{% endblock %}
+{% endblock %}
